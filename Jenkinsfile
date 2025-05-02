@@ -22,7 +22,7 @@ pipeline {
           def files = sh(
             script: "find ./data -name '*.txt' | sort -R",
             returnStdout: true
-          ).trim().split('\n')
+          ).trim().split('\n').toList()
 
           for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
             def shardId = i
