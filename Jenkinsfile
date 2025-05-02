@@ -26,8 +26,8 @@ pipeline {
 
           for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
             def shardId = i
-            def shardFiles = files.findAll { idx -> (files.indexOf(idx) % SHARD_COUNT.toInteger() + 1) == shardId }
-            echo "Shard-${shardId} has ${shardFiles.size()} files"
+            def shardFiles = files.findAll { f -> (files.indexOf(f) % SHARD_COUNT.toInteger() + 1) == shardId }
+            echo "📦 Shard-${shardId} has ${shardFiles.size()} files"
             writeFile file: "shard-${shardId}.list", text: shardFiles.join('\n')
           }
         }
@@ -44,7 +44,7 @@ pipeline {
             def label = "go-shard-${shardId}"
 
             branches["shard${shardId}"] = {
-              podTemplate(inheritFrom: 'default', label: label, yaml: '''
+              podTemplate(label: label, yaml: '''
 apiVersion: v1
 kind: Pod
 spec:
@@ -59,23 +59,28 @@ spec:
 ''') {
                 node(label) {
                   container('go') {
-                  def cmd = """
-                    echo "🔹 Executing shard: shard${shardId}"
-                    echo "🔹 Go version:"
-                    go version
-                    echo "🔹 Go location:"
-                    which go
-                    echo "🔹 Running test runner"
-                    go run cmd/test-transit/main.go \\
-                      -inputFiles=\$(cat shard-${shardId}.list | tr '\\n' ',') \\
-                      -mapFile=dest.csv \\
-                      -apiURL=${API_URL} \\
-                      -k=10 \\
-                      -workers=4 \\
-                      -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
-                  """
+                    dir("${env.WORKSPACE}") {
+                      def cmd = """
+                        set -e
+                        echo "🔹 Executing shard: shard${shardId}"
+                        echo "🔹 Workspace: \$(pwd)"
+                        echo "🔹 Contents of shard-${shardId}.list:"
+                        cat shard-${shardId}.list
 
-                  sh cmd
+                        echo "🔹 Go version:"
+                        go version
+                        echo "🔹 Running test runner"
+
+                        go run cmd/test-transit/main.go \\
+                          -inputFiles=\$(cat shard-${shardId}.list | tr '\\n' ',') \\
+                          -mapFile=dest.csv \\
+                          -apiURL=${API_URL} \\
+                          -k=10 \\
+                          -workers=4 \\
+                          -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
+                      """
+                      sh cmd
+                    }
                   }
                 }
               }
@@ -89,11 +94,11 @@ spec:
 
     stage('Merge JUnit Reports') {
       steps {
-        sh '''
+        sh """
           echo '<?xml version="1.0"?><testsuites>' > ${OUTPUT_DIR}/results.xml
           grep -h '<testsuite' ${OUTPUT_DIR}/shard*.xml >> ${OUTPUT_DIR}/results.xml
           echo '</testsuites>' >> ${OUTPUT_DIR}/results.xml
-        '''
+        """
       }
     }
 
