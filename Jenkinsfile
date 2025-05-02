@@ -62,6 +62,8 @@ spec:
                     dir("${env.WORKSPACE}") {
                       def cmd = """
                         set -e
+                        pwd
+                        ls -l
                         echo "🔹 Executing shard: shard${shardId}"
                         echo "🔹 Workspace: \$(pwd)"
                         echo "🔹 Contents of shard-${shardId}.list:"
