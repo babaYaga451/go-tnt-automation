@@ -59,6 +59,9 @@ spec:
         - cat
       tty: true
 ''') {
+
+                        sh "ls -l ${env.WORKSPACE}"
+                        sh "ls -l ${env.WORKSPACE}/Automation"
                 node(label) {
                   container('go') {
                     dir("${env.WORKSPACE}") {
@@ -66,14 +69,8 @@ spec:
                         set -e
                         pwd
                         ls -l
-                        echo "🔹 Executing shard: shard${shardId}"
-                        echo "🔹 Workspace: \$(pwd)"
-                        echo "🔹 Contents of shard-${shardId}.list:"
                         cat shard-${shardId}.list
-
-                        echo "🔹 Go version:"
                         go version
-                        echo "🔹 Running test runner"
 
                         go run cmd/test-transit/main.go \\
                           -inputFiles=\$(cat shard-${shardId}.list | tr '\\n' ',') \\
