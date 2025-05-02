@@ -58,6 +58,7 @@ spec:
       tty: true
 ''') {
 
+                sh "ls -l"
                 node(label) {
                   container('go') {
                       def cmd = """
