@@ -29,8 +29,9 @@ func WriteJUnit(path string, results []model.TestResult) error {
 
 	for _, r := range results {
 		tc := model.Testcase{
-			Name: r.Record.Shipper + " -> " + r.Record.Destination,
-			Time: r.Duration.String(),
+			Class: fmt.Sprintf("%s.%s", r.Record.Shipper, r.Record.Origin),
+			Name:  fmt.Sprintf("%s -> %s", r.Record.Origin, r.Record.Destination),
+			Time:  fmt.Sprintf("%.3f", r.Duration.Seconds()), // JUnit expects seconds as float
 		}
 
 		if r.Err != nil || r.ActualDays != r.Record.TransitDays {
