@@ -2,7 +2,6 @@ package sampler
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"math/rand"
 	"os"
@@ -89,7 +88,7 @@ func SampleStage(fileCh <-chan string, k, workers int) <-chan model.Record {
 					if _, ok := samplers[days]; !ok {
 						samplers[days] = newReservoir(k)
 					}
-					fmt.Println(r)
+					// fmt.Println(r)
 					samplers[days].add(r)
 				}
 				f.Close()
