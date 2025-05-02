@@ -37,30 +37,20 @@ pipeline {
     }
 
     stage('Run Shards in Parallel') {
-      parallel {
-        shard1: {
           steps {
-            sh 'echo "🔹 Files in shard1:" && ls -l shards/shard1'
-          }
-        }
-        shard2: {
-          steps {
-            sh 'echo "🔹 Files in shard2:" && ls -l shards/shard2'
-          }
-        }
-        shard3: {
-          steps {
-            sh 'echo "🔹 Files in shard3:" && ls -l shards/shard3'
-          }
-        }
-        shard4: {
-          steps {
-            sh 'echo "🔹 Files in shard4:" && ls -l shards/shard4'
+            script {
+              def branches = [:]
+              for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
+                def shardNum = i // must capture `i` in a final variable for Groovy closure
+                branches["Shard ${shardNum}"] = {
+                  sh "echo '🔹 Files in shard${shardNum}:' && ls -l shards/shard${shardNum}"
+                }
+              }
+              parallel branches
+            }
           }
         }
       }
-    }
-  }
 
   post {
     always {
