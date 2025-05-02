@@ -51,6 +51,8 @@ spec:
     - name: go
       image: golang:1.21
       command:
+        - bash
+        - -c
         - cat
       tty: true
 ''') {
