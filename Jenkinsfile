@@ -58,6 +58,7 @@ spec:
       tty: true
 ''') {
 
+                sh "pwd"
                 sh "ls -l"
                 node(label) {
                   container('go') {
@@ -66,7 +67,6 @@ spec:
                         pwd
                         ls -l
                         cat shard-${shardId}.list
-                        go version
 
                         go run cmd/test-transit/main.go \\
                           -inputFiles=\$(cat shard-${shardId}.list | tr '\\n' ',') \\
