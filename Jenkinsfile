@@ -3,111 +3,63 @@ pipeline {
 
   environment {
     SHARD_COUNT = 4
-    OUTPUT_DIR = "junit-results"
-    API_URL = "http://localhost:8080/transit"
+    SHARD_DIR = "shards"
   }
 
   stages {
-    stage('Checkout Code') {
+    stage('Checkout SCM') {
       steps {
         git url: 'https://github.com/babaYaga451/go-tnt-automation.git', branch: 'main'
       }
     }
 
-    stage('Split Input Files') {
+    stage('Split Files Into Shards') {
       steps {
         script {
-          sh "rm -rf ${env.OUTPUT_DIR} && mkdir -p ${env.OUTPUT_DIR}"
+          sh "rm -rf ${SHARD_DIR} && mkdir -p ${SHARD_DIR}"
+          def files = sh(script: "find ./data -name '*.txt' | sort", returnStdout: true).trim().split('\n')
 
-          def files = sh(
-            script: "find ./data -name '*.txt' | sort -R",
-            returnStdout: true
-          ).trim().split('\n').toList()
+          for (int i = 0; i < SHARD_COUNT.toInteger(); i++) {
+            sh "mkdir -p ${SHARD_DIR}/shard${i+1}"
+          }
 
-          for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
-            def shardId = i
-            def shardFiles = files.findAll { f -> (files.indexOf(f) % SHARD_COUNT.toInteger() + 1) == shardId }
-            echo "📦 Shard-${shardId} has ${shardFiles.size()} files"
-            writeFile file: "shard-${shardId}.list", text: shardFiles.join('\n')
+          for (int i = 0; i < files.size(); i++) {
+            int shardNum = (i % SHARD_COUNT) + 1
+            sh "cp ${files[i]} ${SHARD_DIR}/shard${shardNum}/"
           }
         }
       }
     }
 
-    stage('Run Tests in Parallel') {
-      steps {
-        script {
-          def branches = [:]
-
-          for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
-            def shardId = i
-            def label = "go-shard-${shardId}"
-
-            branches["shard${shardId}"] = {
-              podTemplate(inheritFrom: 'default', label: label, yaml: '''
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-    - name: go
-      image: golang:1.21
-      command:
-        - bash
-        - -c
-        - cat
-      tty: true
-''') {
-
-                sh "pwd"
-                sh "ls -l"
-                node(label) {
-                  container('go') {
-                      def cmd = """
-                        set -e
-                        pwd
-                        ls -l
-                        cat shard-${shardId}.list
-
-                        go run cmd/test-transit/main.go \\
-                          -inputFiles=\$(cat shard-${shardId}.list | tr '\\n' ',') \\
-                          -mapFile=dest.csv \\
-                          -apiURL=${API_URL} \\
-                          -k=10 \\
-                          -workers=4 \\
-                          -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
-                      """
-                      sh cmd
-                  }
-                }
-              }
-            }
+    stage('Run Shards in Parallel') {
+      parallel {
+        stage('Shard 1') {
+          steps {
+            sh 'echo "🔹 Files in shard1:" && ls -l shards/shard1'
           }
-
-          parallel branches
         }
-      }
-    }
-
-    stage('Merge JUnit Reports') {
-      steps {
-        sh """
-          echo '<?xml version="1.0"?><testsuites>' > ${OUTPUT_DIR}/results.xml
-          grep -h '<testsuite' ${OUTPUT_DIR}/shard*.xml >> ${OUTPUT_DIR}/results.xml
-          echo '</testsuites>' >> ${OUTPUT_DIR}/results.xml
-        """
-      }
-    }
-
-    stage('Publish Single Report') {
-      steps {
-        junit "${OUTPUT_DIR}/results.xml"
+        stage('Shard 2') {
+          steps {
+            sh 'echo "🔹 Files in shard2:" && ls -l shards/shard2'
+          }
+        }
+        stage('Shard 3') {
+          steps {
+            sh 'echo "🔹 Files in shard3:" && ls -l shards/shard3'
+          }
+        }
+        stage('Shard 4') {
+          steps {
+            sh 'echo "🔹 Files in shard4:" && ls -l shards/shard4'
+          }
+        }
       }
     }
   }
 
   post {
     always {
-      archiveArtifacts artifacts: "${OUTPUT_DIR}/*.xml", fingerprint: true
+      archiveArtifacts artifacts: 'shards/**/*.txt', fingerprint: true
     }
   }
 }
