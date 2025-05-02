@@ -60,11 +60,8 @@ spec:
       tty: true
 ''') {
 
-                        sh "ls -l ${env.WORKSPACE}"
-                        sh "ls -l ${env.WORKSPACE}/Automation"
                 node(label) {
                   container('go') {
-                    dir("${env.WORKSPACE}") {
                       def cmd = """
                         set -e
                         pwd
@@ -81,7 +78,6 @@ spec:
                           -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
                       """
                       sh cmd
-                    }
                   }
                 }
               }
