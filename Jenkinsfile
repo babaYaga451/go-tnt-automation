@@ -53,6 +53,7 @@ spec:
 
     stage('Publish Report') {
       steps {
+        sh 'cat junit-results/results.xml'
         junit "${OUTPUT_FILE}"
       }
     }
