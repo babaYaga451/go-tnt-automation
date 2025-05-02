@@ -54,7 +54,7 @@ spec:
 ''') {
                   node(POD_LABEL) {
                     container('go') {
-                      sh """
+                      sh '''
                         go run cmd/test-transit/main.go \\
                           -inputFiles=$$(cat shard-${shardId}.list | tr '\\n' ',') \\
                           -mapFile=dest.csv \\
@@ -62,7 +62,7 @@ spec:
                           -k=10 \\
                           -workers=4 \\
                           -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
-                      """
+                      '''
                     }
                   }
                 }
@@ -77,11 +77,11 @@ spec:
     stage('Merge JUnit Reports') {
       agent any
       steps {
-        sh """
+        sh '''
           echo '<?xml version="1.0"?><testsuites>' > ${OUTPUT_DIR}/results.xml
           grep -h '<testsuite' ${OUTPUT_DIR}/shard*.xml >> ${OUTPUT_DIR}/results.xml
           echo '</testsuites>' >> ${OUTPUT_DIR}/results.xml
-        """
+        '''
       }
     }
 
