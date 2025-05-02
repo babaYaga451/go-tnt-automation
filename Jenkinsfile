@@ -28,8 +28,9 @@ pipeline {
             def shardId = i
             def shardFiles = files.findAll { f -> (files.indexOf(f) % SHARD_COUNT.toInteger() + 1) == shardId }
             echo "📦 Shard-${shardId} has ${shardFiles.size()} files"
-            writeFile file: "${env.WORKSPACE}/shard-${shardId}.list", text: shardFiles.join('\n')
-            sh "ls -l ${env.WORKSPACE}/shard-*.list"
+            dir('/home/jenkins/agent/workspace/Automation') {
+              writeFile file: "shard-${shardId}.list", text: shardFiles.join('\n')
+            }
           }
         }
       }
