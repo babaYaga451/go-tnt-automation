@@ -16,7 +16,7 @@ spec:
   }
 
   environment {
-    API_URL = "http://localhost:8080/transit"
+    API_URL = "http://http://transit-api.jenkins-cluster.svc.cluster.local/transit/transit"
     OUTPUT_FILE = "shard1/results.xml"
   }
 
