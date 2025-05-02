@@ -27,6 +27,7 @@ pipeline {
           for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
             def shardId = i
             def shardFiles = files.findAll { idx -> (files.indexOf(idx) % SHARD_COUNT.toInteger() + 1) == shardId }
+            echo "Shard-${shardId} has ${shardFiles.size()} files"
             writeFile file: "shard-${shardId}.list", text: shardFiles.join('\n')
           }
         }
