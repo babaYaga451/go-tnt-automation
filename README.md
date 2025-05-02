@@ -56,6 +56,6 @@ enrichCh := make(chan Record, 10000)
 resultCh := make(chan TestResult, 64000)
 ```
 
-## Block Diagram
+📚 [See Architecture Overview in the Wiki →](https://github.com/babaYaga451/go-tnt-automation/wiki/Architecture)
 
-[[https://github.com/babaYaga451/go-tnt-automation.wiki.git]]
+![Visit Wiki](https://img.shields.io/badge/docs-wiki-blue?logo=github)
