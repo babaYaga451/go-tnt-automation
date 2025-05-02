@@ -29,7 +29,7 @@ func WriteJUnit(path string, results []model.TestResult) error {
 
 	for _, r := range results {
 		tc := model.Testcase{
-			Class: fmt.Sprintf("Shipper=%s|TransitDays=%d", r.Record.Shipper, r.Record.TransitDays),
+			Class: fmt.Sprintf("%s.%s", r.Record.Shipper, r.Record.Origin),
 			Name:  fmt.Sprintf("%s -> %s", r.Record.Origin, r.Record.Destination),
 			Time:  fmt.Sprintf("%.3f", r.Duration.Seconds())}
 
