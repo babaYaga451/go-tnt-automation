@@ -56,7 +56,7 @@ spec:
                     container('go') {
                       sh """
                         go run cmd/test-transit/main.go \\
-                          -inputFiles=$(cat shard-${shardId}.list | tr '\\n' ',') \\
+                          -inputFiles=$$(cat shard-${shardId}.list | tr '\\n' ',') \\
                           -mapFile=dest.csv \\
                           -apiURL=${API_URL} \\
                           -k=10 \\
