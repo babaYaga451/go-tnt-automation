@@ -41,7 +41,7 @@ pipeline {
             def shardId = i
             branches["shard${shardId}"] = {
               stage("Run shard${shardId}") {
-                podTemplate(yaml: """
+                podTemplate(yaml: '''
 apiVersion: v1
 kind: Pod
 spec:
@@ -51,7 +51,7 @@ spec:
     command:
     - cat
     tty: true
-""") {
+''') {
                   node(POD_LABEL) {
                     container('go') {
                       sh """
