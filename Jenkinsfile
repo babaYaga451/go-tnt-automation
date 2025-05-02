@@ -59,23 +59,23 @@ spec:
 ''') {
                 node(label) {
                   container('go') {
-                    sh '''
-                      echo "🔹 Executing shard: shard${shardId}"
-                      echo "🔹 Go version:"
-                      go version
+                  def cmd = """
+                    echo "🔹 Executing shard: shard${shardId}"
+                    echo "🔹 Go version:"
+                    go version
+                    echo "🔹 Go location:"
+                    which go
+                    echo "🔹 Running test runner"
+                    go run cmd/test-transit/main.go \\
+                      -inputFiles=\$(cat shard-${shardId}.list | tr '\\n' ',') \\
+                      -mapFile=dest.csv \\
+                      -apiURL=${API_URL} \\
+                      -k=10 \\
+                      -workers=4 \\
+                      -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
+                  """
 
-                      echo "🔹 Go location:"
-                      which go
-
-                      echo "🔹 Running test runner"
-                      go run cmd/test-transit/main.go \\
-                        -inputFiles=$$(cat shard-${shardId}.list | tr '\\n' ',') \\
-                        -mapFile=dest.csv \\
-                        -apiURL=${API_URL} \\
-                        -k=10 \\
-                        -workers=4 \\
-                        -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
-                    '''
+                  sh cmd
                   }
                 }
               }
