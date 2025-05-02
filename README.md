@@ -37,39 +37,25 @@ origin|destination|state|transitDays
 ...
 ```
 
-## Architecture
+# ⚙️ Back Pressure Handling in `go-tnt-tester`
 
-<details>
-<summary>Click to expand Mermaid code</summary>
-flowchart LR
-    subgraph Pipeline Stages
-        A[📁 discover\n(walk files)] --> B[🧪 sample\n(reservoir sampling)]
-        B --> C[🔍 enrich\n(city/state/zip lookup)]
-        C --> D[🌐 api call\n(HTTP request + validation)]
-        D --> E[📝 result collect\n(JUnit writer)]
-    end
+This project is designed to efficiently process thousands of transit test records using Go pipelines. A key feature is how it **naturally handles back pressure** using **buffered channels and worker goroutines**.
 
-    subgraph Channels
-        a1[fileCh\n(chan string, 1000)]
-        a2[sampleCh\n(chan Record, 10000)]
-        a3[enrichCh\n(chan Record, 10000)]
-        a4[resultCh\n(chan TestResult, 64000)]
-    end
+---
 
-    A --> a1 --> B
-    B --> a2 --> C
-    C --> a3 --> D
-    D --> a4 --> E
+## 🔄 Pipeline Architecture
 
-    %% Back pressure arrows
-    style a4 stroke:#f00,stroke-width:2px
-    style a3 stroke:#f00,stroke-width:2px
-    style a2 stroke:#f00,stroke-width:2px
-    style a1 stroke:#f00,stroke-width:2px
+Your pipeline stages are:
 
-    D -. blocks on full resultCh .-> C
-    C -. blocks on full enrichCh .-> B
-    B -. blocks on full sampleCh .-> A
-    A -. blocked write .-> STOP[🔁 pipeline slows down (back pressure)]
+Each stage communicates through a **bounded buffered channel**:
 
-</details>
+```go
+fileCh   := make(chan string, 1000)
+sampleCh := make(chan Record, 10000)
+enrichCh := make(chan Record, 10000)
+resultCh := make(chan TestResult, 64000)
+```
+
+## Block Diagram
+
+[[https://github.com/babaYaga451/go-tnt-automation.wiki.git]]
