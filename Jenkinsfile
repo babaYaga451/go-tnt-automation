@@ -34,54 +34,55 @@ pipeline {
     }
 
     stage('Run Tests in Parallel') {
-      parallel {
+      steps {
         script {
           def branches = [:]
+
           for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
             def shardId = i
+            def label = "go-shard-${shardId}"
+
             branches["shard${shardId}"] = {
-              stage("Run shard${shardId}") {
-                podTemplate(yaml: '''
+              podTemplate(label: label, yaml: '''
 apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: go
-    image: golang:1.21
-    command:
-    - cat
-    tty: true
+    - name: go
+      image: golang:1.21
+      command:
+        - cat
+      tty: true
 ''') {
-                  node(POD_LABEL) {
-                    container('go') {
-                      sh '''
-                        go run cmd/test-transit/main.go \\
-                          -inputFiles=$$(cat shard-${shardId}.list | tr '\\n' ',') \\
-                          -mapFile=dest.csv \\
-                          -apiURL=${API_URL} \\
-                          -k=10 \\
-                          -workers=4 \\
-                          -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
-                      '''
-                    }
+                node(label) {
+                  container('go') {
+                    sh """
+                      go run cmd/test-transit/main.go \\
+                        -inputFiles=$$(cat shard-${shardId}.list | tr '\\n' ',') \\
+                        -mapFile=dest.csv \\
+                        -apiURL=${API_URL} \\
+                        -k=10 \\
+                        -workers=4 \\
+                        -outputFile=${OUTPUT_DIR}/shard${shardId}.xml
+                    """
                   }
                 }
               }
             }
           }
+
           parallel branches
         }
       }
     }
 
     stage('Merge JUnit Reports') {
-      agent any
       steps {
-        sh '''
+        sh """
           echo '<?xml version="1.0"?><testsuites>' > ${OUTPUT_DIR}/results.xml
           grep -h '<testsuite' ${OUTPUT_DIR}/shard*.xml >> ${OUTPUT_DIR}/results.xml
           echo '</testsuites>' >> ${OUTPUT_DIR}/results.xml
-        '''
+        """
       }
     }
 
