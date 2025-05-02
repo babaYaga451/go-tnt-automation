@@ -1,60 +1,66 @@
 pipeline {
-  agent any
+  agent {
+    kubernetes {
+      yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: go
+      image: golang:1.21
+      command:
+        - cat
+      tty: true
+"""
+    }
+  }
 
   environment {
-    SHARD_COUNT = 4
-    SHARD_DIR = "shards"
+    API_URL = "http://localhost:8080/transit"
+    OUTPUT_FILE = "shard1/results.xml"
   }
 
   stages {
-    stage('Checkout SCM') {
+    stage('Checkout Code') {
       steps {
         git url: 'https://github.com/babaYaga451/go-tnt-automation.git', branch: 'main'
       }
     }
 
-    stage('Split Files Into Shards') {
+    stage('Prepare Output Dir') {
       steps {
-        script {
-          sh "rm -rf ${SHARD_DIR} && mkdir -p ${SHARD_DIR}"
-          def files = sh(script: "find ./data -name '*.txt' | sort", returnStdout: true).trim().split('\n').toList()
+        sh 'mkdir -p shard1'
+      }
+    }
 
-          int shardCount = SHARD_COUNT.toInteger()
-          int filesPerShard = Math.ceil(files.size() / (double)shardCount) as int
-
-          for (int i = 0; i < shardCount; i++) {
-            sh "mkdir -p ${SHARD_DIR}/shard${i+1}"
-            def start = i * filesPerShard
-            def end = Math.min(start + filesPerShard, files.size())
-            def shardFiles = files.subList(start, end)
-
-            for (f in shardFiles) {
-              sh "cp '${f}' ${SHARD_DIR}/shard${i+1}/"
-            }
-          }
+    stage('Run Transit Test') {
+      steps {
+        container('go') {
+          sh '''
+            go version
+            echo "🔹 Running Go Transit Test..."
+            go run cmd/test-transit/main.go \
+              -inputDir=./data \
+              -mapFile=./dest.csv \
+              -apiURL=$API_URL \
+              -k=10 \
+              -workers=4 \
+              -outputFile=$OUTPUT_FILE
+          '''
         }
       }
     }
 
-    stage('Run Shards in Parallel') {
-          steps {
-            script {
-              def branches = [:]
-              for (int i = 1; i <= SHARD_COUNT.toInteger(); i++) {
-                def shardNum = i // must capture `i` in a final variable for Groovy closure
-                branches["Shard ${shardNum}"] = {
-                  sh "echo '🔹 Files in shard${shardNum}:' && ls -l shards/shard${shardNum}"
-                }
-              }
-              parallel branches
-            }
-          }
-        }
+    stage('Publish Report') {
+      steps {
+        junit "${OUTPUT_FILE}"
       }
+    }
+  }
 
   post {
     always {
-      archiveArtifacts artifacts: 'shards/**/*.txt', fingerprint: true
+      archiveArtifacts artifacts: 'shard1/results.xml', fingerprint: true
     }
   }
 }
