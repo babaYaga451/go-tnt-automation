@@ -37,25 +37,6 @@ origin|destination|state|transitDays
 ...
 ```
 
-# ⚙️ Back Pressure Handling in `go-tnt-tester`
-
-This project is designed to efficiently process thousands of transit test records using Go pipelines. A key feature is how it **naturally handles back pressure** using **buffered channels and worker goroutines**.
-
----
-
-## 🔄 Pipeline Architecture
-
-Your pipeline stages are:
-
-Each stage communicates through a **bounded buffered channel**:
-
-```go
-fileCh   := make(chan string, 1000)
-sampleCh := make(chan Record, 10000)
-enrichCh := make(chan Record, 10000)
-resultCh := make(chan TestResult, 64000)
-```
-
 # ⚙️ Back Pressure Handling in go-tnt-automation
 
 ---
