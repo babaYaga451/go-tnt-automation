@@ -44,7 +44,7 @@ pipeline {
             def label = "go-shard-${shardId}"
 
             branches["shard${shardId}"] = {
-              podTemplate(label: label, yaml: '''
+              podTemplate(inheritFrom: 'default', label: label, yaml: '''
 apiVersion: v1
 kind: Pod
 spec:
