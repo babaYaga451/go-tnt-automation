@@ -17,7 +17,7 @@ pipeline {
       steps {
         script {
           sh "rm -rf ${SHARD_DIR} && mkdir -p ${SHARD_DIR}"
-          def files = sh(script: "find ./data -name '*.txt' | sort", returnStdout: true).trim().split('\n')
+          def files = sh(script: "find ./data -name '*.txt' | sort", returnStdout: true).trim().split('\n').toList()
 
           int shardCount = SHARD_COUNT.toInteger()
           int filesPerShard = Math.ceil(files.size() / (double)shardCount) as int
