@@ -19,13 +19,15 @@ pipeline {
           sh "rm -rf ${SHARD_DIR} && mkdir -p ${SHARD_DIR}"
           def files = sh(script: "find ./data -name '*.txt' | sort", returnStdout: true).trim().split('\n')
 
-          for (int i = 0; i < SHARD_COUNT.toInteger(); i++) {
+          int shardCount = SHARD_COUNT.toInteger()
+
+          for (int i = 0; i < shardCount; i++) {
             sh "mkdir -p ${SHARD_DIR}/shard${i+1}"
           }
 
           for (int i = 0; i < files.size(); i++) {
-            int shardNum = (i % SHARD_COUNT) + 1
-            sh "cp ${files[i]} ${SHARD_DIR}/shard${shardNum}/"
+            int shardNum = (i % shardCount) + 1
+            sh "cp '${files[i]}' ${SHARD_DIR}/shard${shardNum}/"
           }
         }
       }
