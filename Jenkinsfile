@@ -31,8 +31,7 @@ pipeline {
             dir('/home/jenkins/agent/workspace/Automation') {
               writeFile file: "shard-${shardId}.list", text: shardFiles.join('\n')
             }
-            sh "ls -lh ${sharedDir}/shard-*.list"
-          }
+            sh "ls -lh /home/jenkins/agent/workspace/Automation/shard-*.list"          }
         }
       }
     }
