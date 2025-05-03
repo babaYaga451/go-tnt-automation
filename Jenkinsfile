@@ -17,7 +17,7 @@ spec:
 
   environment {
     API_URL = "http://transit-api.jenkins-cluster.svc.cluster.local/transit"
-    OUTPUT_FILE = "shard1/results.xml"
+    ALLURE_RESULTS = "allure-results"
   }
 
   stages {
@@ -27,41 +27,42 @@ spec:
       }
     }
 
-    stage('Prepare Output Dir') {
-      steps {
-        sh 'mkdir -p shard1'
-      }
-    }
-
-    stage('Run Transit Test') {
+    stage('Prepare Directories') {
       steps {
         container('go') {
           sh '''
-            go version
-            echo "🔹 Running Go Transit Test..."
-            go run cmd/test-transit/main.go \
-              -inputDir=./data \
-              -mapFile=./dest.csv \
-              -apiURL=$API_URL \
-              -k=10 \
-              -workers=4 \
-              -outputFile=$OUTPUT_FILE
+            mkdir -p ${ALLURE_RESULTS}
           '''
         }
       }
     }
 
-    stage('Publish Report') {
+    stage('Run Allure Tests') {
       steps {
-        sh 'cat shard1/results.xml'
-        junit "${OUTPUT_FILE}"
+        container('go') {
+          sh '''
+            echo "Running Allure-enhanced Go Tests..."
+            go test -v
+          '''
+        }
+      }
+    }
+
+    stage('Publish Allure Report') {
+      steps {
+        allure([
+          includeProperties: false,
+          jdk: '',
+          results: [[path: "${ALLURE_RESULTS}"]],
+          reportBuildPolicy: 'ALWAYS'
+        ])
       }
     }
   }
-
+  
   post {
     always {
-      archiveArtifacts artifacts: 'shard1/results.xml', fingerprint: true
+      archiveArtifacts artifacts: "${ALLURE_RESULTS}/**", fingerprint: true
     }
   }
 }
