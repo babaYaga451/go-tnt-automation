@@ -56,13 +56,14 @@ spec:
     }
 
     stage('Archive Allure Results') {
-          steps {
-            archiveArtifacts artifacts: "${ALLURE_RESULTS}/**", fingerprint: true
-          }
-        }
+      steps {
+        stash name: 'allure-results', includes: "${ALLURE_RESULTS}/**"
+      }
+    }
 
     stage('Publish Allure Report') {
       steps {
+        unstash 'allure-results'
         script {
           allure([
             includeProperties: false,
