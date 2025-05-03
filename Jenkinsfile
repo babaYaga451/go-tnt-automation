@@ -8,8 +8,7 @@ spec:
   containers:
     - name: go
       image: golang:1.23.5
-      command:
-        - cat
+      command: ["cat"]
       tty: true
 """
     }
@@ -32,9 +31,7 @@ spec:
     stage('Prepare Directories') {
       steps {
         container('go') {
-          sh '''
-            mkdir -p ${ALLURE_RESULTS}
-          '''
+          sh 'mkdir -p ${ALLURE_RESULTS}'
         }
       }
     }
@@ -42,26 +39,30 @@ spec:
     stage('Run Allure Tests') {
       steps {
         container('go') {
-          sh '''
-            echo "Running Allure-enhanced Go Tests..."
-            go test -v
-          '''
+          catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+            sh '''
+              echo "Running Allure-enhanced Go Tests..."
+              API_URL=${API_URL} INPUT_DIR=${INPUT_DIR} MAP_FILE=${MAP_FILE} go test -v ./test/...
+            '''
+          }
         }
       }
     }
 
     stage('Publish Allure Report') {
       steps {
-        allure([
-          includeProperties: false,
-          jdk: '',
-          results: [[path: "${ALLURE_RESULTS}"]],
-          reportBuildPolicy: 'ALWAYS'
-        ])
+        script {
+          allure([
+            includeProperties: false,
+            jdk: '',
+            results: [[path: "${ALLURE_RESULTS}"]],
+            reportBuildPolicy: 'ALWAYS'
+          ])
+        }
       }
     }
   }
-  
+
   post {
     always {
       archiveArtifacts artifacts: "${ALLURE_RESULTS}/**", fingerprint: true
