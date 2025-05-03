@@ -5,11 +5,17 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
+  volumes:
+    - name: workspace-volume
+      emptyDir: {}
   containers:
     - name: go
       image: golang:1.23.5
       command: ["cat"]
       tty: true
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent
 """
     }
   }
