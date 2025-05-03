@@ -55,6 +55,12 @@ spec:
       }
     }
 
+    stage('Archive Allure Results') {
+          steps {
+            archiveArtifacts artifacts: "${ALLURE_RESULTS}/**", fingerprint: true
+          }
+        }
+
     stage('Publish Allure Report') {
       steps {
         script {
@@ -66,12 +72,6 @@ spec:
           ])
         }
       }
-    }
-  }
-
-  post {
-    always {
-      archiveArtifacts artifacts: "${ALLURE_RESULTS}/**", fingerprint: true
     }
   }
 }
