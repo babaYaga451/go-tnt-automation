@@ -5,17 +5,11 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-  volumes:
-    - name: workspace-volume
-      emptyDir: {}
   containers:
     - name: go
       image: golang:1.23.5
       command: ["cat"]
       tty: true
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
 """
     }
   }
@@ -47,6 +41,9 @@ spec:
         container('go') {
           catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
             sh '''
+              mkdir -p ${ALLURE_RESULTS}
+              chmod -R 777 ${ALLURE_RESULTS}
+
               echo "Running Allure-enhanced Go Tests..."
               API_URL=${API_URL} INPUT_DIR=${INPUT_DIR} MAP_FILE=${MAP_FILE} go test -v
             '''
@@ -73,6 +70,12 @@ spec:
           ])
         }
       }
+    }
+  }
+
+    post {
+      always {
+        archiveArtifacts artifacts: "${ALLURE_RESULTS}/**", fingerprint: true
     }
   }
 }
