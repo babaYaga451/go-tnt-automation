@@ -42,7 +42,7 @@ spec:
           catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
             sh '''
               echo "Running Allure-enhanced Go Tests..."
-              API_URL=${API_URL} INPUT_DIR=${INPUT_DIR} MAP_FILE=${MAP_FILE} go test -v ./test/...
+              API_URL=${API_URL} INPUT_DIR=${INPUT_DIR} MAP_FILE=${MAP_FILE} go test -v
             '''
           }
         }
