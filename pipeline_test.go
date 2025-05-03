@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -12,10 +13,14 @@ import (
 )
 
 func TestTransitResults(t *testing.T) {
+	inputDir := getEnv("INPUT_DIR", "./data")
+	mapFile := getEnv("MAP_FILE", "dest.csv")
+	apiURL := getEnv("API_URL", "http://localhost:8080/transit")
+
 	results := pipeline.RunPipeLine(
-		"./data",
-		"dest.csv",
-		"http://localhost:8080/transit",
+		inputDir,
+		mapFile,
+		apiURL,
 		10,
 		4,
 	)
@@ -57,4 +62,11 @@ func TestTransitResults(t *testing.T) {
 			})
 		})
 	}
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }

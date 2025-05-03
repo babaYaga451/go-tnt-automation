@@ -17,6 +17,8 @@ spec:
 
   environment {
     API_URL = "http://transit-api.jenkins-cluster.svc.cluster.local/transit"
+    INPUT_DIR = "./data"
+    MAP_FILE = "dest.csv"
     ALLURE_RESULTS = "allure-results"
   }
 
