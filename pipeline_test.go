@@ -25,7 +25,7 @@ func TestTransitResults(t *testing.T) {
 		4,
 	)
 
-	for _, tr := range results {
+	for tr := range results {
 		testName := fmt.Sprintf("%s → %s", tr.Record.Origin, tr.Record.Destination)
 
 		runner.Run(t, testName, func(t provider.T) {

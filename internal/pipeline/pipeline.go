@@ -8,11 +8,10 @@ import (
 	"github.com/babaYaga451/go-tnt-automation/internal/discover"
 	"github.com/babaYaga451/go-tnt-automation/internal/enricher"
 	"github.com/babaYaga451/go-tnt-automation/internal/model"
-	report "github.com/babaYaga451/go-tnt-automation/internal/reporter"
 	"github.com/babaYaga451/go-tnt-automation/internal/sampler"
 )
 
-func RunPipeLine(inputDir, mapFile, apiURL string, k, workers int) []model.TestResult {
+func RunPipeLine(inputDir, mapFile, apiURL string, k, workers int) <-chan model.TestResult {
 
 	log.Println("Starting pipeline")
 	log.Println("Using inputDir:", inputDir)
@@ -27,6 +26,5 @@ func RunPipeLine(inputDir, mapFile, apiURL string, k, workers int) []model.TestR
 	enrichCh := enricher.EnrichStage(sampleCh, destMap, workers)
 	resultCh := apiclient.APIStage(enrichCh, apiURL, workers)
 
-	results := report.CollectResults(resultCh)
-	return results
+	return resultCh
 }
